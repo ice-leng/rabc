@@ -1,0 +1,23 @@
+{
+  "name": "lengbin/yii-rbac",
+  "description": "yii rbac extension",
+  "type": "library",
+  "keywords": ["php", "extension","yii rbac", "rbac"],
+  "license": "MIT",
+  "require": {
+    "php": ">=7.2.0",
+    "lengbin/yii-db": "dev-master"
+  },
+  "minimum-stability": "stable",
+  "autoload": {
+    "psr-4": {
+      "Lengbin\\YiiDb\\Rbac\\": "src"
+    }
+  },
+  "authors": [
+    {
+      "name": "lengbin",
+      "email": "xykxyk2008@163.com"
+    }
+  ]
+}
