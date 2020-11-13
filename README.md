@@ -7,7 +7,7 @@
 </p>
 
 这是基于[yii-rbac](https://github.com/yiisoft/rbac)修改抽离扩展版本
-适合于（除yii）php框架
+配合 [auth](https://github.com/ice-leng/auth) 可做鉴权 权限验证
 
 安装
 ------------
@@ -50,7 +50,6 @@ Usage
         $manager->add(new Role('author'));
         $manager->add(new Role('reader'));
 
-
         $manager->addChild($manager->getRole('reader'), $manager->getPermission('readPost'));
 
         $manager->addChild($manager->getRole('author'), $manager->getPermission('createPost'));
@@ -77,6 +76,10 @@ Usage
         var_dump($manager->getPermissions());
 
         $manager->removeAll();
+        // 菜单
+        $manager->add(new Menu('一级菜单'));
+        $manager->remove(new Menu('一级菜单'));
+        $manager->getMenu("一级菜单");
 
 ```
 

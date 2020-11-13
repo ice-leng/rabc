@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Manager;
+namespace Lengbin\YiiSoft\Rbac\Manager;
 
-use Lengbin\YiiDb\Rbac\Assignment;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidArgumentException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidCallException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidConfigException;
-use Lengbin\YiiDb\Rbac\Item;
-use Lengbin\YiiDb\Rbac\Permission;
-use Lengbin\YiiDb\Rbac\Role;
-use Lengbin\YiiDb\Rbac\Rule;
-use Lengbin\YiiDb\Rbac\RuleFactoryInterface;
+use Lengbin\YiiSoft\Rbac\Assignment;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidArgumentException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidCallException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidConfigException;
+use Lengbin\YiiSoft\Rbac\Item;
+use Lengbin\YiiSoft\Rbac\Menu;
+use Lengbin\YiiSoft\Rbac\Permission;
+use Lengbin\YiiSoft\Rbac\Role;
+use Lengbin\YiiSoft\Rbac\Rule;
+use Lengbin\YiiSoft\Rbac\RuleFactoryInterface;
+use Psr\Log\LoggerInterface;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -37,6 +39,12 @@ class PhpManager extends BaseManager
     protected $cache;
 
     /**
+     * logger
+     * @var LoggerInterface $logger
+     */
+    protected $logger;
+
+    /**
      * name
      * @var string
      */
@@ -47,6 +55,11 @@ class PhpManager extends BaseManager
      * @var string
      */
     protected $assignmentCacheName;
+
+    /**
+     * @var string
+     */
+    protected $menuCacheName;
 
     /**
      * name
@@ -79,23 +92,34 @@ class PhpManager extends BaseManager
     protected $rules = [];
 
     /**
+     * @var Menu[]
+     */
+    protected $menus = [];
+
+    /**
      * @param RuleFactoryInterface $ruleFactory
      * @param CacheInterface       $cache               cache
+     * @param LoggerInterface|null $logger
      * @param string|null          $itemCacheName       items cache name
      * @param string|null          $assignmentCacheName assignments cache name
      * @param string|null          $ruleCacheName       rules cache name
+     * @param string|null          $menuCacheName
      */
     public function __construct(RuleFactoryInterface $ruleFactory,
         CacheInterface $cache,
+        ?LoggerInterface $logger = null,
         ?string $itemCacheName = null,
         ?string $assignmentCacheName = null,
-        ?string $ruleCacheName = null)
+        ?string $ruleCacheName = null,
+        ?string $menuCacheName = null)
     {
         parent::__construct($ruleFactory);
         $this->cache = $cache;
-        $this->itemCacheName = $itemCacheName ?? 'rbac:items';
-        $this->assignmentCacheName = $assignmentCacheName ?? 'rbac:assignments';
-        $this->ruleCacheName = $ruleCacheName ?? 'rbac.rules';
+        $this->logger = $logger;
+        $this->itemCacheName = $itemCacheName ?? 'auth:items';
+        $this->assignmentCacheName = $assignmentCacheName ?? 'auth:assignments';
+        $this->ruleCacheName = $ruleCacheName ?? 'auth.rules';
+        $this->menuCacheName = $menuCacheName ?? 'auth.menus';
         $this->load();
     }
 
@@ -119,6 +143,12 @@ class PhpManager extends BaseManager
 
         /* @var $item Item */
         $item = $this->items[$permissionName] ?? null;
+
+        if ($this->logger instanceof LoggerInterface) {
+            $message = $item instanceof Role ? "Checking role: $permissionName" : "Checking permission: $permissionName";
+            $this->logger->info(__METHOD__ . $message);
+        }
+
         if (!$this->isPermission($item)) {
             return false;
         }
@@ -151,6 +181,11 @@ class PhpManager extends BaseManager
 
         /* @var $item Item */
         $item = $this->items[$itemName];
+
+        if ($this->logger instanceof LoggerInterface) {
+            $message = $item instanceof Role ? "Checking role: $itemName" : "Checking permission: $itemName";
+            $this->logger->info(__METHOD__ . $message);
+        }
 
         if (!$this->executeRule($user, $item, $params)) {
             return false;
@@ -619,10 +654,12 @@ class PhpManager extends BaseManager
         $this->rules = [];
         $this->assignments = [];
         $this->items = [];
+        $this->menus = [];
 
         $items = $this->cache->get($this->itemCacheName, []);
         $assignments = $this->cache->get($this->assignmentCacheName, []);
         $rules = $this->cache->get($this->ruleCacheName, []);
+        $menus = $this->cache->get($this->menuCacheName, []);
 
         foreach ($items as $name => $item) {
             $class = $item['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
@@ -650,6 +687,23 @@ class PhpManager extends BaseManager
         foreach ($rules as $name => $ruleData) {
             $this->rules[$name] = unserialize($ruleData);
         }
+
+        foreach ($menus as $name => $menu) {
+            $this->menus[$name] = $this->populateMenu($menu);
+        }
+
+    }
+
+    protected function populateMenu($row): Menu
+    {
+        return (new Menu($row['name']))->withPid($row['pid'])
+            ->withIcon($row['icon'])
+            ->withPath($row['path'])
+            ->withSort($row['sort'])
+            ->withTemplate($row['template'])
+            ->withRole($row['role'])
+            ->withCreatedAt($row['created_at'])
+            ->withUpdatedAt($row['updated_at']);
     }
 
     /**
@@ -679,6 +733,15 @@ class PhpManager extends BaseManager
             }
         }
         $this->cache->set($this->itemCacheName, $items);
+    }
+
+    protected function saveMenus(): void
+    {
+        $items = [];
+        foreach ($this->menus as $name => $item) {
+            $items[$name] = array_filter($item->getAttributes());
+        }
+        $this->cache->set($this->menuCacheName, $items);
     }
 
     /**
@@ -747,5 +810,51 @@ class PhpManager extends BaseManager
         }
 
         return $normalizePermissions;
+    }
+
+    protected function addMenu(Menu $menu): void
+    {
+        $time = time();
+        $menu = $menu->withUpdatedAt($time)->withCreatedAt($time);
+        $this->menus[$menu->getName()] = $menu;
+
+        $this->saveMenus();
+    }
+
+    protected function removeMenu(Menu $menu): void
+    {
+        if (isset($this->menus[$menu->getName()])) {
+            unset($this->menus[$menu->getName()]);
+            $this->saveMenus();
+        }
+    }
+
+    protected function updateMenu(string $name, Menu $menu): void
+    {
+        if ($menu->getName() !== $name) {
+            unset($this->menus[$name]);
+        }
+        $this->menus[$menu->getName()] = $menu;
+        $this->saveMenus();
+    }
+
+    public function getMenu(string $name): ?Menu
+    {
+        return $this->menus[$name] ?? null;
+    }
+
+    public function getMenus(string $role = ''): array
+    {
+        $items = [];
+        foreach ($this->menus as $name => $item) {
+            if (!empty($role)) {
+                if ($item->getRole() === $role) {
+                    $items[$name] = $item;
+                }
+            } else {
+                $items[$name] = $item;
+            }
+        }
+        return $items;
     }
 }

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac;
+namespace Lengbin\YiiSoft\Rbac;
 
 /**
  * Rule represents a business constraint that may be associated with a role, permission or assignment.

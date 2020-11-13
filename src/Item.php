@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac;
+namespace Lengbin\YiiSoft\Rbac;
 
 /**
  * For more details and usage information on Item, see the [guide article on security authorization](guide:security-authorization).

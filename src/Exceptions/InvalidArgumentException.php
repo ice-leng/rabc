@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Exceptions;
+namespace Lengbin\YiiSoft\Rbac\Exceptions;
 
 /**
  * InvalidArgumentException represents an exception caused by invalid arguments passed to a method.

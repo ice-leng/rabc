@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Exceptions;
+namespace Lengbin\YiiSoft\Rbac\Exceptions;
 
 
 /**

@@ -13,6 +13,7 @@ drop table if exists `auth_assignment`;
 drop table if exists `auth_item_child`;
 drop table if exists `auth_item`;
 drop table if exists `auth_rule`;
+drop table if exists `auth_menu`;
 
 create table `auth_rule`
 (
@@ -53,4 +54,17 @@ create table `auth_assignment`
    primary key (`item_name`, `user_id`),
    foreign key (`item_name`) references `auth_item` (`name`) on delete cascade on update cascade,
    key `auth_assignment_user_id_idx` (`user_id`)
+) engine InnoDB;
+
+create table `auth_menu`
+(
+   `name`                 varchar(64) not null,
+   `pid`                  varchar(64) not null,
+   `icon`                 varchar(64) not null,
+   `path`                 varchar(255) not null,
+   `template`             varchar(64) not null,
+   `role`                 varchar(64) not null,
+   `created_at`           integer,
+   `updated_at`           integer,
+    primary key (`name`)
 ) engine InnoDB;

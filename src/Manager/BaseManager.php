@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Manager;
+namespace Lengbin\YiiSoft\Rbac\Manager;
 
-use Lengbin\YiiDb\Rbac\Assignment;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidArgumentException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidConfigException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidValueException;
-use Lengbin\YiiDb\Rbac\Item;
-use Lengbin\YiiDb\Rbac\ItemInterface;
-use Lengbin\YiiDb\Rbac\ManagerInterface;
-use Lengbin\YiiDb\Rbac\Permission;
-use Lengbin\YiiDb\Rbac\Rule;
-use Lengbin\YiiDb\Rbac\Role;
-use Lengbin\YiiDb\Rbac\RuleFactoryInterface;
+use Lengbin\YiiSoft\Rbac\Assignment;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidArgumentException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidConfigException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidValueException;
+use Lengbin\YiiSoft\Rbac\Item;
+use Lengbin\YiiSoft\Rbac\ItemInterface;
+use Lengbin\YiiSoft\Rbac\ManagerInterface;
+use Lengbin\YiiSoft\Rbac\Menu;
+use Lengbin\YiiSoft\Rbac\Permission;
+use Lengbin\YiiSoft\Rbac\Rule;
+use Lengbin\YiiSoft\Rbac\Role;
+use Lengbin\YiiSoft\Rbac\RuleFactoryInterface;
 
 /**
  * BaseManager is a base class implementing {@see ManagerInterface} for RBAC management.
@@ -76,6 +77,11 @@ abstract class BaseManager implements ManagerInterface
     abstract protected function addRule(Rule $rule): void;
 
     /**
+     * @param Menu $menu
+     */
+    abstract protected function addMenu(Menu $menu): void;
+
+    /**
      * Removes an auth item from the RBAC system.
      *
      * @param Item $item the item to remove
@@ -94,10 +100,15 @@ abstract class BaseManager implements ManagerInterface
     abstract protected function removeRule(Rule $rule): void;
 
     /**
+     * @param Menu $menu
+     */
+    abstract protected function removeMenu(Menu $menu): void;
+
+    /**
      * Updates an auth item in the RBAC system.
      *
      * @param string $name the name of the item being updated
-     * @param Item $item the updated item
+     * @param Item   $item the updated item
      *
      * @return void whether the auth item is successfully updated
      */
@@ -107,11 +118,17 @@ abstract class BaseManager implements ManagerInterface
      * Updates a rule to the RBAC system.
      *
      * @param string $name the name of the rule being updated
-     * @param Rule $rule the updated rule
+     * @param Rule   $rule the updated rule
      *
      * @return void whether the rule is successfully updated
      */
     abstract protected function updateRule(string $name, Rule $rule): void;
+
+    /**
+     * @param string $name
+     * @param Menu   $menu
+     */
+    abstract protected function updateMenu(string $name, Menu $menu): void;
 
     /**
      * @param ItemInterface|Item|Rule $item
@@ -126,6 +143,11 @@ abstract class BaseManager implements ManagerInterface
 
         if ($this->isRule($item)) {
             $this->addRule($item);
+            return;
+        }
+
+        if ($this->isMenu($item)) {
+            $this->addMenu($item);
             return;
         }
 
@@ -152,11 +174,15 @@ abstract class BaseManager implements ManagerInterface
             return;
         }
 
+        if ($this->isMenu($item)) {
+            $this->removeMenu($item);
+        }
+
         throw new InvalidArgumentException('Removing unsupported item type.');
     }
 
     /**
-     * @param string $name
+     * @param string                  $name
      * @param ItemInterface|Item|Rule $object
      */
     public function update(string $name, ItemInterface $object): void
@@ -172,6 +198,10 @@ abstract class BaseManager implements ManagerInterface
             return;
         }
 
+        if ($this->isMenu($object)) {
+            $this->updateMenu($name, $object);
+        }
+
         throw new InvalidArgumentException('Updating unsupported item type.');
     }
 
@@ -180,6 +210,20 @@ abstract class BaseManager implements ManagerInterface
         $item = $this->getItem($name);
         return $this->isRole($item) ? $item : null;
     }
+
+    /**
+     * @param string $name
+     *
+     * @return Menu|null
+     */
+    abstract public function getMenu(string $name): ?Menu;
+
+    /**
+     * @param string $role
+     *
+     * @return array
+     */
+    abstract public function getMenus(string $role = ''): array;
 
     public function getPermission(string $name): ?Permission
     {
@@ -257,10 +301,10 @@ abstract class BaseManager implements ManagerInterface
      * If the item does not specify a rule, this method will return true. Otherwise, it will
      * return the value of [[Rule::execute()]].
      *
-     * @param string $user the user ID. This should be a string representing
-     * the unique identifier of a user.
-     * @param Item $item the auth item that needs to execute its rule
-     * @param array $params parameters passed to {@see AccessCheckerInterface::userHasPermission()} and will be passed to the rule
+     * @param string $user   the user ID. This should be a string representing
+     *                       the unique identifier of a user.
+     * @param Item   $item   the auth item that needs to execute its rule
+     * @param array  $params parameters passed to {@see AccessCheckerInterface::userHasPermission()} and will be passed to the rule
      *
      * @return bool the return value of {@see Rule::execute()}. If the auth item does not specify a rule, true will be
      * returned.
@@ -309,6 +353,11 @@ abstract class BaseManager implements ManagerInterface
     protected function isRule(?ItemInterface $item): bool
     {
         return $item !== null && $item instanceof Rule;
+    }
+
+    protected function isMenu(?ItemInterface $item): bool
+    {
+        return $item !== null && $item instanceof Menu;
     }
 
     protected function createItemRuleIfNotExist(Item $item): void

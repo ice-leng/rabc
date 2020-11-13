@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Exceptions;
+namespace Lengbin\YiiSoft\Rbac\Exceptions;
 
 /**
  * InvalidValueException represents an exception caused by a function returning a value of unexpected type.

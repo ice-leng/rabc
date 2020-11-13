@@ -2,18 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\Manager;
+namespace Lengbin\YiiSoft\Rbac\Manager;
 
-use Lengbin\YiiDb\Rbac\Assignment;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidArgumentException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidCallException;
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidConfigException;
-use Lengbin\YiiDb\Rbac\Item;
-use Lengbin\YiiDb\Rbac\Permission;
-use Lengbin\YiiDb\Rbac\Role;
-use Lengbin\YiiDb\Rbac\Rule;
-use Lengbin\YiiDb\Rbac\RuleFactoryInterface;
+use Lengbin\YiiSoft\Rbac\Assignment;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidArgumentException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidCallException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidConfigException;
+use Lengbin\YiiSoft\Rbac\Item;
+use Lengbin\YiiSoft\Rbac\Menu;
+use Lengbin\YiiSoft\Rbac\Permission;
+use Lengbin\YiiSoft\Rbac\Role;
+use Lengbin\YiiSoft\Rbac\Rule;
+use Lengbin\YiiSoft\Rbac\RuleFactoryInterface;
 use Lengbin\Helper\YiiSoft\VarDumper;
+use Psr\Log\LoggerInterface;
 
 /**
  * PhpManager represents an authorization manager that stores authorization
@@ -62,6 +64,20 @@ class PhpManagerFile extends BaseManager
     protected $ruleFile;
 
     /**
+     * @var string
+     *
+     * @see loadFromFile()
+     * @see saveToFile()
+     */
+    protected $menuFile;
+
+    /**
+     * logger
+     * @var LoggerInterface $logger
+     */
+    protected $logger;
+
+    /**
      * @var Item[]
      * format [itemName => item]
      */
@@ -72,6 +88,11 @@ class PhpManagerFile extends BaseManager
      * format [itemName => [childName => child]]
      */
     protected $children = [];
+
+    /**
+     * @var Menu[]
+     */
+    protected $menus = [];
 
     /**
      * @var array
@@ -88,23 +109,29 @@ class PhpManagerFile extends BaseManager
     /**
      * @param RuleFactoryInterface $ruleFactory
      * @param string|null          $directory      directory to store data into
+     * @param LoggerInterface|null $logger
      * @param string|null          $itemFile       path to the file storing auth items
      * @param string|null          $assignmentFile path to file storing assignments
      * @param string|null          $ruleFile       path to file storing rules
+     * @param string|null          $menuFile
      */
     public function __construct(RuleFactoryInterface $ruleFactory,
         ?string $directory = null,
+        ?LoggerInterface $logger = null,
         ?string $itemFile = null,
         ?string $assignmentFile = null,
-        ?string $ruleFile = null)
+        ?string $ruleFile = null,
+        ?string $menuFile = null)
     {
         parent::__construct($ruleFactory);
         if (empty($directory)) {
             $directory = dirname(__DIR__ ) . DIRECTORY_SEPARATOR . 'Cache';
         }
+        $this->logger = $logger;
         $this->itemFile = $directory . DIRECTORY_SEPARATOR . ($itemFile ?? 'items.php');
         $this->assignmentFile = $directory . DIRECTORY_SEPARATOR . ($assignmentFile ?? 'assignments.php');
         $this->ruleFile = $directory . DIRECTORY_SEPARATOR . ($ruleFile ?? 'rules.php');
+        $this->menuFile = $directory . DIRECTORY_SEPARATOR . ($menuFile ?? 'menus.php');
         $this->load();
     }
 
@@ -128,6 +155,12 @@ class PhpManagerFile extends BaseManager
 
         /* @var $item Item */
         $item = $this->items[$permissionName] ?? null;
+
+        if ($this->logger instanceof LoggerInterface) {
+            $message = $item instanceof Role ? "Checking role: $permissionName" : "Checking permission: $permissionName";
+            $this->logger->info(__METHOD__ . $message);
+        }
+
         if (!$this->isPermission($item)) {
             return false;
         }
@@ -160,6 +193,11 @@ class PhpManagerFile extends BaseManager
 
         /* @var $item Item */
         $item = $this->items[$itemName];
+
+        if ($this->logger instanceof LoggerInterface) {
+            $message = $item instanceof Role ? "Checking role: $itemName" : "Checking permission: $itemName";
+            $this->logger->info(__METHOD__ . $message);
+        }
 
         if (!$this->executeRule($user, $item, $params)) {
             return false;
@@ -628,12 +666,14 @@ class PhpManagerFile extends BaseManager
         $this->rules = [];
         $this->assignments = [];
         $this->items = [];
+        $this->menus = [];
 
         $items = $this->loadFromFile($this->itemFile);
         $itemsMtime = @filemtime($this->itemFile);
         $assignments = $this->loadFromFile($this->assignmentFile);
         $assignmentsMtime = @filemtime($this->assignmentFile);
         $rules = $this->loadFromFile($this->ruleFile);
+        $menus = $this->loadFromFile($this->menuFile);
 
         foreach ($items as $name => $item) {
             $class = $item['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
@@ -662,6 +702,23 @@ class PhpManagerFile extends BaseManager
         foreach ($rules as $name => $ruleData) {
             $this->rules[$name] = unserialize($ruleData);
         }
+
+        foreach ($menus as $name => $menu) {
+            $this->menus[$name] = $this->populateMenu($menu);
+        }
+
+    }
+
+    protected function populateMenu($row): Menu
+    {
+        return (new Menu($row['name']))->withPid($row['pid'])
+            ->withIcon($row['icon'])
+            ->withPath($row['path'])
+            ->withSort($row['sort'])
+            ->withTemplate($row['template'])
+            ->withRole($row['role'])
+            ->withCreatedAt($row['created_at'])
+            ->withUpdatedAt($row['updated_at']);
     }
 
     /**
@@ -768,6 +825,15 @@ class PhpManagerFile extends BaseManager
         $this->saveToFile($rules, $this->ruleFile);
     }
 
+    protected function saveMenus(): void
+    {
+        $items = [];
+        foreach ($this->menus as $name => $item) {
+            $items[$name] = array_filter($item->getAttributes());
+        }
+        $this->saveToFile($items, $this->menuFile);
+    }
+
     public function getUserIdsByRole(string $roleName): array
     {
         $result = [];
@@ -807,5 +873,51 @@ class PhpManagerFile extends BaseManager
         }
 
         return $normalizePermissions;
+    }
+
+    protected function addMenu(Menu $menu): void
+    {
+        $time = time();
+        $menu = $menu->withUpdatedAt($time)->withCreatedAt($time);
+        $this->menus[$menu->getName()] = $menu;
+
+        $this->saveMenus();
+    }
+
+    protected function removeMenu(Menu $menu): void
+    {
+        if (isset($this->menus[$menu->getName()])) {
+            unset($this->menus[$menu->getName()]);
+            $this->saveMenus();
+        }
+    }
+
+    protected function updateMenu(string $name, Menu $menu): void
+    {
+        if ($menu->getName() !== $name) {
+            unset($this->menus[$name]);
+        }
+        $this->menus[$menu->getName()] = $menu;
+        $this->saveMenus();
+    }
+
+    public function getMenu(string $name): ?Menu
+    {
+        return $this->menus[$name] ?? null;
+    }
+
+    public function getMenus(string $role = ''): array
+    {
+        $items = [];
+        foreach ($this->menus as $name => $item) {
+            if (!empty($role)) {
+                if ($item->getRole() === $role) {
+                    $items[$name] = $item;
+                }
+            } else {
+                $items[$name] = $item;
+            }
+        }
+        return $items;
     }
 }

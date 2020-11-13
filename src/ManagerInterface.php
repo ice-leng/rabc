@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac;
+namespace Lengbin\YiiSoft\Rbac;
 
-use Lengbin\YiiDb\Rbac\Exceptions\InvalidArgumentException;
+use Lengbin\YiiSoft\Rbac\Exceptions\InvalidArgumentException;
 use Lengbin\Auth\User\AccessCheckerInterface;
 
 /**

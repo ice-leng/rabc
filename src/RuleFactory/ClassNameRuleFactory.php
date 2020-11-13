@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac\RuleFactory;
+namespace Lengbin\YiiSoft\Rbac\RuleFactory;
 
-use Lengbin\YiiDb\Rbac\Rule;
-use Lengbin\YiiDb\Rbac\RuleFactoryInterface;
+use Lengbin\YiiSoft\Rbac\Rule;
+use Lengbin\YiiSoft\Rbac\RuleFactoryInterface;
 
 class ClassNameRuleFactory implements RuleFactoryInterface
 {

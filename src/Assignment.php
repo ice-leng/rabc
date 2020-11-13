@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac;
+namespace Lengbin\YiiSoft\Rbac;
 
 /**
  * Assignment represents an assignment of a role or a permission to a user.

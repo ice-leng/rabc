@@ -5,13 +5,12 @@
   "keywords": ["php", "extension","yii rbac", "rbac"],
   "license": "MIT",
   "require": {
-    "php": ">=7.2.0",
-    "lengbin/yii-db": "dev-master"
+    "php": ">=7.2.0"
   },
   "minimum-stability": "stable",
   "autoload": {
     "psr-4": {
-      "Lengbin\\YiiDb\\Rbac\\": "src"
+      "Lengbin\\YiiSoft\\Rbac\\": "src"
     }
   },
   "authors": [

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Lengbin\YiiDb\Rbac;
+namespace Lengbin\YiiSoft\Rbac;
 
 class Role extends Item
 {
