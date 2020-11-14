@@ -207,6 +207,7 @@ class Menu implements ItemInterface
             'path'       => $this->getPath(),
             'template'   => $this->getTemplate(),
             'role'       => $this->getRole(),
+            'sort'       => $this->getSort(),
             'updated_at' => $this->getUpdatedAt(),
             'created_at' => $this->getCreatedAt(),
         ];

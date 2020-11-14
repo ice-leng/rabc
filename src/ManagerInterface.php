@@ -33,7 +33,7 @@ interface ManagerInterface extends AccessCheckerInterface
     /**
      * Updates the specified role, permission or rule in the system.
      *
-     * @param string $name the old name of the role, permission or rule
+     * @param string        $name the old name of the role, permission or rule
      * @param ItemInterface $item
      *
      * @return void
@@ -48,6 +48,20 @@ interface ManagerInterface extends AccessCheckerInterface
      * @return null|Role the role corresponding to the specified name. Null is returned if no such role.
      */
     public function getRole(string $name): ?Role;
+
+    /**
+     * @param string $name
+     *
+     * @return Menu|null
+     */
+    public function getMenu(string $name): ?Menu;
+
+    /**
+     * @param string $role
+     *
+     * @return array
+     */
+    public function getMenus(string $role = ''): array;
 
     /**
      * Returns all roles in the system.
@@ -192,7 +206,7 @@ interface ManagerInterface extends AccessCheckerInterface
     /**
      * Assigns a role or permission to a user.
      *
-     * @param Item $item
+     * @param Item   $item
      * @param string $userId the user ID
      *
      * @return Assignment the role or permission assignment information.
@@ -204,7 +218,7 @@ interface ManagerInterface extends AccessCheckerInterface
     /**
      * Revokes a role or a permission from a user.
      *
-     * @param Item $item
+     * @param Item   $item
      * @param string $userId the user ID
      *
      * @return void
@@ -224,7 +238,7 @@ interface ManagerInterface extends AccessCheckerInterface
      * Returns the assignment information regarding a role or a permission and a user.
      *
      * @param string $itemName the role or the permission name
-     * @param string $userId the user ID
+     * @param string $userId   the user ID
      *
      * @return null|Assignment the assignment information. Null is returned if
      * the role is not assigned to the user.

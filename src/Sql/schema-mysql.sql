@@ -27,7 +27,7 @@ create table `auth_rule`
 create table `auth_item`
 (
    `name`                 varchar(64) not null,
-   `type`                 smallint not null,
+   `type`                 varchar(16) not null,
    `description`          text,
    `rule_name`            varchar(64),
    `created_at`           integer,
@@ -64,6 +64,7 @@ create table `auth_menu`
    `path`                 varchar(255) not null,
    `template`             varchar(64) not null,
    `role`                 varchar(64) not null,
+   `sort`                 integer,
    `created_at`           integer,
    `updated_at`           integer,
     primary key (`name`)

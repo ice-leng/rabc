@@ -142,7 +142,8 @@ class DbManager extends BaseManager
         $items = $this->db->select("SELECT * FROM {$this->itemTable}");
         $this->items = [];
         foreach ($items as $row) {
-            $this->items[$row['name']] = $this->populateItem($row);
+            $result = $this->populateItem($row);
+            $this->items[$result->getName()] = $result;
         }
 
         $this->rules = $this->getRules();
@@ -152,6 +153,7 @@ class DbManager extends BaseManager
         $itemChildren = $this->db->select("SELECT * FROM {$this->itemChildTable}");
 
         foreach ($itemChildren as $row) {
+            $row = (array)$row;
             if (isset($this->items[$row['child']])) {
                 $this->parents[$row['child']][] = $row['parent'];
             }
@@ -255,10 +257,10 @@ class DbManager extends BaseManager
      *
      * @return mixed
      */
-    protected function populateItem($row): Item
+    public function populateItem($row): Item
     {
+        $row = (array)$row;
         $class = $row['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
-
         return (new $class($row['name']))->withDescription($row['description'] ?? '')
             ->withRuleName($row['rule_name'] ?? null)
             ->withCreatedAt($row['created_at'])
@@ -322,7 +324,8 @@ class DbManager extends BaseManager
         $rows = $this->db->select("SELECT * FROM {$this->itemTable} WHERE type = :type", [':type' => $type]);
         $items = [];
         foreach ($rows as $row) {
-            $items[$row['name']] = $this->populateItem($row);
+            $item = $this->populateItem($row);
+            $items[$item->getName()] = $item;
         }
 
         return $items;
@@ -379,6 +382,9 @@ class DbManager extends BaseManager
         $sql = "UPDATE `{$tableName}` SET ";
 
         foreach ($data as $n => $d) {
+            if (is_null($d)) {
+                continue;
+            }
             $n2 = ':p' . $n;
             $params[$n2] = $d;
             $sql .= "{$n} = {$n2}, ";
@@ -387,12 +393,14 @@ class DbManager extends BaseManager
         $sql .= ' WHERE ';
 
         foreach ($where as $n => $d) {
+            if (is_null($d)) {
+                continue;
+            }
             $n2 = ':w' . $n;
             $params[$n2] = $d;
             $sql .= "{$n} = {$n2} AND ";
         }
         $sql = substr($sql, 0, strripos($sql, 'AND '));
-
         return $this->db->update($sql, $params);
     }
 
@@ -405,13 +413,19 @@ class DbManager extends BaseManager
     protected function deleteData(string $tableName, array $where = [])
     {
         $params = [];
-        $sql = "DELETE FROM `{$tableName}` WHERE ";
-        foreach ($where as $n => $d) {
-            $n2 = ':' . $n;
-            $params[$n2] = $d;
-            $sql .= "{$n} = {$n2} AND ";
+        $sql = "DELETE FROM `{$tableName}`";
+        if (!empty($where)) {
+            $sql .= ' WHERE ';
+            foreach ($where as $n => $d) {
+                if (is_null($d)) {
+                    continue;
+                }
+                $n2 = ':' . $n;
+                $params[$n2] = $d;
+                $sql .= "{$n} = {$n2} AND ";
+            }
+            $sql = substr($sql, 0, strripos($sql, 'AND '));
         }
-        $sql = substr($sql, 0, strripos($sql, 'AND '));
         return $this->db->delete($sql, $params);
     }
 
@@ -489,7 +503,8 @@ class DbManager extends BaseManager
         $rows = $this->db->select($sql, [':type' => Item::TYPE_ROLE, ':user_id' => $userId]);
         $roles = $this->getDefaultRoleInstances();
         foreach ($rows as $row) {
-            $roles[$row['name']] = $this->populateItem($row);
+            $item = $this->populateItem($row);
+            $roles[$item->getName()] = $item;
         }
 
         return $roles;
@@ -519,6 +534,7 @@ class DbManager extends BaseManager
         $rows = $this->db->select("SELECT * FROM {$this->itemChildTable}");
         $parents = [];
         foreach ($rows as $row) {
+            $row = (array)$row;
             $parents[$row['parent']][] = $row['child'];
         }
 
@@ -571,7 +587,8 @@ class DbManager extends BaseManager
 
         $permissions = [];
         foreach ($rows as $row) {
-            $permissions[$row['name']] = $this->populateItem($row);
+            $item = $this->populateItem($row);
+            $permissions[$item->getName()] = $item;
         }
 
         return $permissions;
@@ -594,7 +611,8 @@ class DbManager extends BaseManager
 
         $permissions = [];
         foreach ($rows as $row) {
-            $permissions[$row['name']] = $this->populateItem($row);
+            $item = $this->populateItem($row);
+            $permissions[$item->getName()] = $item;
         }
 
         return $permissions;
@@ -661,6 +679,7 @@ class DbManager extends BaseManager
 
         $rules = [];
         foreach ($rows as $row) {
+            $row = (array)$row;
             $data = $row['data'];
             if (is_resource($data)) {
                 $data = stream_get_contents($data);
@@ -753,7 +772,8 @@ class DbManager extends BaseManager
 
         $children = [];
         foreach ($rows as $row) {
-            $children[$row['name']] = $this->populateItem($row);
+            $item = $this->populateItem($row);
+            $children[$item->getName()] = $item;
         }
 
         return $children;
@@ -835,7 +855,9 @@ class DbManager extends BaseManager
 
         $assignments = [];
         foreach ($rows as $row) {
-            $assignments[$row['item_name']] = new Assignment($row['user_id'], $row['item_name'], $row['created_at']);
+            $row = (array)$row;
+            $item = new Assignment($row['user_id'], $row['item_name'], $row['created_at']);
+            $assignments[$item->getItemName()] = $item;
         }
 
         return $assignments;
@@ -922,8 +944,9 @@ class DbManager extends BaseManager
         $this->cleanCache();
     }
 
-    protected function populateMenu($row): Menu
+    public function populateMenu($row): Menu
     {
+        $row = (array)$row;
         return (new Menu($row['name']))->withPid($row['pid'])
             ->withIcon($row['icon'])
             ->withPath($row['path'])
@@ -966,7 +989,8 @@ class DbManager extends BaseManager
         $rows = $this->db->select("SELECT * FROM {$this->itemTable} {$where} ORDER BY sort", $params);
         $items = [];
         foreach ($rows as $row) {
-            $items[$row['name']] = $this->populateMenu($row);
+            $item = $this->populateMenu($row);
+            $items[$item->getName()] = $item;
         }
         return $items;
     }

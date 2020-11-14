@@ -694,7 +694,7 @@ class PhpManager extends BaseManager
 
     }
 
-    protected function populateMenu($row): Menu
+    public function populateMenu($row): Menu
     {
         return (new Menu($row['name']))->withPid($row['pid'])
             ->withIcon($row['icon'])

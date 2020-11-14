@@ -176,6 +176,7 @@ abstract class BaseManager implements ManagerInterface
 
         if ($this->isMenu($item)) {
             $this->removeMenu($item);
+            return;
         }
 
         throw new InvalidArgumentException('Removing unsupported item type.');
@@ -200,6 +201,7 @@ abstract class BaseManager implements ManagerInterface
 
         if ($this->isMenu($object)) {
             $this->updateMenu($name, $object);
+            return;
         }
 
         throw new InvalidArgumentException('Updating unsupported item type.');
