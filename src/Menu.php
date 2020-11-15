@@ -99,9 +99,9 @@ class Menu implements ItemInterface
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getIcon(): string
+    public function getIcon(): ?string
     {
         return $this->icon;
     }
@@ -159,9 +159,9 @@ class Menu implements ItemInterface
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getTemplate(): string
+    public function getTemplate(): ?string
     {
         return $this->template;
     }
@@ -179,9 +179,9 @@ class Menu implements ItemInterface
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getRole(): string
+    public function getRole(): ?string
     {
         return $this->role;
     }
