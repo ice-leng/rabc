@@ -32,6 +32,7 @@ Usage
 
 ## 用法和yii 是一致的
 
+如果使用Db驱动 请导入[sql](./src/Sql/schema-mysql.sql)
 
 ```php
         
