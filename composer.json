@@ -5,7 +5,8 @@
   "keywords": ["php", "extension","yii rbac", "rbac"],
   "license": "MIT",
   "require": {
-    "php": ">=7.2.0"
+    "php": ">=7.2.0",
+    "lengbin/auth": "dev-master"
   },
   "minimum-stability": "stable",
   "autoload": {
