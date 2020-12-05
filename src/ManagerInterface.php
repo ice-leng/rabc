@@ -291,4 +291,14 @@ interface ManagerInterface extends AccessCheckerInterface
      * Removes all role assignments.
      */
     public function removeAllAssignments(): void;
+
+    /**
+     * @return array
+     */
+    public function getParentRoles(): array;
+
+    /**
+     * @return array
+     */
+    public function getParentPermissions(): array;
 }

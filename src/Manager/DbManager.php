@@ -542,6 +542,53 @@ class DbManager extends BaseManager
     }
 
     /**
+     * @return array
+     */
+    public function getParentPermissions(): array
+    {
+        return $this->getChildrenListByType(Item::TYPE_PERMISSION);
+    }
+
+    /**
+     * @return array
+     */
+    public function getParentRoles(): array
+    {
+        return $this->getChildrenListByType(Item::TYPE_ROLE);
+    }
+
+    /**
+     * @param string $type
+     *
+     * @return array
+     */
+    protected function getChildrenListByType(string $type): array
+    {
+        $sql = "SELECT a.name, a.type, a.description, a.rule_name, a.created_at, a.updated_at, b.parent, c.description as parent_description, c.type as parent_type, c.rule_name as parent_rule_name, c.created_at as parent_created_at, c.updated_at as parent_updated_at FROM {$this->itemChildTable} as b INNER JOIN {$this->itemTable} as a on (a.name = b.child) INNER JOIN {$this->itemTable} as c on c.name = b.parent  WHERE c.type = :type";
+        $rows = $this->db->select($sql, [':type' => $type]);
+
+        $data = [];
+        foreach ($rows as $row) {
+            $row = (array)$row;
+            if (empty($data[$row['parent']])) {
+                $data[$row['parent']] = [
+                    'parent'   => $this->populateItem([
+                        'name'        => $row['parent'],
+                        'description' => $row['parent_description'],
+                        'type'        => $row['parent_type'],
+                        'rule_name'   => $row['parent_rule_name'],
+                        'created_at'  => $row['parent_created_at'],
+                        'updated_at'  => $row['parent_updated_at'],
+                    ]),
+                    'children' => [],
+                ];
+            }
+            $data[$row['parent']]['children'][$row['name']] = $this->populateItem($row);
+        }
+        return $data;
+    }
+
+    /**
      * @inheritDoc
      */
     public function getChildRoles(string $roleName): array

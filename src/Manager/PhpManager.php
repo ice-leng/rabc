@@ -857,4 +857,46 @@ class PhpManager extends BaseManager
         }
         return $items;
     }
+
+    public function getParentRoles(): array
+    {
+        $data = [];
+        foreach ($this->children as $parent => $child) {
+            $itemParent = $this->getItem($parent);
+            if (!$this->isRole($itemParent)) {
+                continue;
+            }
+            if (empty($data[$parent])) {
+                $data[$parent] = [
+                    'parent'   => $itemParent,
+                    'children' => [],
+                ];
+            }
+            foreach ($child as $name => $item) {
+                $data[$parent]['children'][$name] = $item;
+            }
+        }
+        return $data;
+    }
+
+    public function getParentPermissions(): array
+    {
+        $data = [];
+        foreach ($this->children as $parent => $child) {
+            $itemParent = $this->getItem($parent);
+            if (!$this->isPermission($itemParent)) {
+                continue;
+            }
+            if (empty($data[$parent])) {
+                $data[$parent] = [
+                    'parent'   => $itemParent,
+                    'children' => [],
+                ];
+            }
+            foreach ($child as $name => $item) {
+                $data[$parent]['children'][$name] = $item;
+            }
+        }
+        return $data;
+    }
 }
