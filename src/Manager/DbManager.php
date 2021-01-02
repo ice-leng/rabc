@@ -1033,7 +1033,7 @@ class DbManager extends BaseManager
             $params = [':role' => $role];
         }
 
-        $rows = $this->db->select("SELECT * FROM {$this->itemTable} {$where} ORDER BY sort", $params);
+        $rows = $this->db->select("SELECT * FROM {$this->menuTable} {$where} ORDER BY sort", $params);
         $items = [];
         foreach ($rows as $row) {
             $item = $this->populateMenu($row);
