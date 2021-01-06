@@ -309,7 +309,7 @@ class DbManager extends BaseManager
 
         $row = $this->db->selectOne("SELECT * FROM {$this->itemTable} WHERE name = :name LIMIT 1", [':name' => $name]);
 
-        if ($row === false) {
+        if (empty($row)) {
             return null;
         }
 
@@ -882,7 +882,7 @@ class DbManager extends BaseManager
         $row = $this->db->selectOne("SELECT * FROM {$this->assignmentTable} WHERE user_id = :user_id AND item_name = :item_name LIMIT 1",
             [':user_id' => $userId, ':item_name' => $itemName]);
 
-        if ($row === false) {
+        if (empty($row)) {
             return null;
         }
 
@@ -1012,7 +1012,7 @@ class DbManager extends BaseManager
 
         $row = $this->db->selectOne("SELECT * FROM {$this->menuTable} WHERE name = :name LIMIT 1", [':name' => $name]);
 
-        if ($row === false) {
+        if (empty($row)) {
             return null;
         }
 
