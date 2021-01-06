@@ -626,8 +626,8 @@ class DbManager extends BaseManager
                 $params[$n] = $value;
                 $p[] = $n;
             }
-            $in = implode("', '", $p);
-            $sql .= " AND name in ( '{$in}' ) ";
+            $in = implode(", ", $p);
+            $sql .= " AND name in ( {$in} ) ";
         }
 
         $rows = $this->db->select($sql, $params);
