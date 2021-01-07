@@ -1029,7 +1029,7 @@ class DbManager extends BaseManager
         $where = '';
         $params = [];
         if (!$this->isEmptyName($role)) {
-            $where = 'WHERE role = :role';
+            $where = 'WHERE FIND_IN_SET(:role. role)';
             $params = [':role' => $role];
         }
 
