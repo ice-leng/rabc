@@ -49,7 +49,7 @@ create table `auth_item_child`
 create table `auth_assignment`
 (
    `item_name`            varchar(64) not null,
-   `user_id`              varchar(64) not null,
+   `user_id`              bigint(20) not null,
    `created_at`           integer,
    primary key (`item_name`, `user_id`),
    foreign key (`item_name`) references `auth_item` (`name`) on delete cascade on update cascade,
