@@ -187,6 +187,10 @@ class PhpManager extends BaseManager
             $this->logger->info(__METHOD__ . $message);
         }
 
+        if ($item->getEnable() !== 1) {
+            return false;
+        }
+
         if (!$this->executeRule($user, $item, $params)) {
             return false;
         }

@@ -139,7 +139,7 @@ class DbManager extends BaseManager
             return;
         }
 
-        $items = $this->db->select("SELECT * FROM {$this->itemTable}");
+        $items = $this->db->select("SELECT * FROM {$this->itemTable} where enable = 1");
         $this->items = [];
         foreach ($items as $row) {
             $result = $this->populateItem($row);
@@ -150,7 +150,7 @@ class DbManager extends BaseManager
 
         $this->parents = [];
 
-        $itemChildren = $this->db->select("SELECT * FROM {$this->itemChildTable}");
+        $itemChildren = $this->db->select("SELECT * FROM {$this->itemChildTable} where enable = 1");
 
         foreach ($itemChildren as $row) {
             $row = (array)$row;
