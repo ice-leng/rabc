@@ -664,6 +664,7 @@ class PhpManager extends BaseManager
         foreach ($items as $name => $item) {
             $class = $item['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
             $this->items[$name] = (new $class($name))->withDescription($item['description'] ?? '')
+                ->withEnable($item['enable'])
                 ->withRuleName($item['ruleName'] ?? null)
                 ->withCreatedAt($item['createdAt'])
                 ->withUpdatedAt($item['updatedAt']);
@@ -702,6 +703,7 @@ class PhpManager extends BaseManager
             ->withSort($row['sort'])
             ->withTemplate($row['template'])
             ->withRole($row['role'])
+            ->withEnable($row['enable'])
             ->withCreatedAt($row['created_at'])
             ->withUpdatedAt($row['updated_at']);
     }

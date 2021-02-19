@@ -37,6 +37,11 @@ abstract class Item implements ItemInterface
      */
     private $updatedAt = null;
 
+    /**
+     * @var int enable
+     */
+    private $enable = 1;
+
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -114,6 +119,26 @@ abstract class Item implements ItemInterface
         return $this->updatedAt !== null;
     }
 
+    /**
+     * @return int
+     */
+    public function getEnable(): int
+    {
+        return $this->enable;
+    }
+
+    /**
+     * @param int $enable
+     *
+     * @return Item
+     */
+    public function withEnable(int $enable): Item
+    {
+        $new = clone $this;
+        $new->enable = $enable;
+        return $new;
+    }
+
     public function getAttributes(): array
     {
         return [
@@ -123,6 +148,7 @@ abstract class Item implements ItemInterface
             'type'        => $this->getType(),
             'updated_at'  => $this->getUpdatedAt(),
             'created_at'  => $this->getCreatedAt(),
+            'enable'      => $this->getEnable()
         ];
     }
 }

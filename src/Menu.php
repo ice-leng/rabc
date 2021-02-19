@@ -37,6 +37,11 @@ class Menu implements ItemInterface
      */
     private $role;
 
+    /**
+     * @var int enable
+     */
+    private $enable = 1;
+
     public function __construct(string $name)
     {
         $this->name = $name;
@@ -198,6 +203,26 @@ class Menu implements ItemInterface
         return $new;
     }
 
+    /**
+     * @return int
+     */
+    public function getEnable(): int
+    {
+        return $this->enable;
+    }
+
+    /**
+     * @param int $enable
+     *
+     * @return Menu
+     */
+    public function withEnable(int $enable): Menu
+    {
+        $new = clone $this;
+        $new->enable = $enable;
+        return $new;
+    }
+
     public function getAttributes(): array
     {
         return [
@@ -208,6 +233,7 @@ class Menu implements ItemInterface
             'template'   => $this->getTemplate(),
             'role'       => $this->getRole(),
             'sort'       => $this->getSort(),
+            'enable'     => $this->getEnable(),
             'updated_at' => $this->getUpdatedAt(),
             'created_at' => $this->getCreatedAt(),
         ];

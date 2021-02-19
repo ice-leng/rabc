@@ -678,7 +678,10 @@ class PhpManagerFile extends BaseManager
         foreach ($items as $name => $item) {
             $class = $item['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
 
-            $this->items[$name] = (new $class($name))->withDescription($item['description'] ?? '')->withRuleName($item['ruleName'] ?? null)
+            $this->items[$name] = (new $class($name))
+                ->withDescription($item['description'] ?? '')
+                ->withRuleName($item['ruleName'] ?? null)
+                ->withEnable($item['enable'])
                 // FIXME: 'data' => $item['data'] ?? null,
                 ->withCreatedAt($itemsMtime)->withUpdatedAt($itemsMtime);
         }
@@ -717,6 +720,7 @@ class PhpManagerFile extends BaseManager
             ->withSort($row['sort'])
             ->withTemplate($row['template'])
             ->withRole($row['role'])
+            ->withEnable($row['enable'])
             ->withCreatedAt($row['created_at'])
             ->withUpdatedAt($row['updated_at']);
     }

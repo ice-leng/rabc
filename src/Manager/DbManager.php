@@ -263,6 +263,7 @@ class DbManager extends BaseManager
         $class = $row['type'] === Item::TYPE_PERMISSION ? Permission::class : Role::class;
         return (new $class($row['name']))->withDescription($row['description'] ?? '')
             ->withRuleName($row['rule_name'] ?? null)
+            ->withEnable($row['enable'])
             ->withCreatedAt($row['created_at'])
             ->withUpdatedAt($row['updated_at']);
     }
@@ -1000,6 +1001,7 @@ class DbManager extends BaseManager
             ->withSort($row['sort'])
             ->withTemplate($row['template'])
             ->withRole($row['role'])
+            ->withEnable($row['enable'])
             ->withCreatedAt($row['created_at'])
             ->withUpdatedAt($row['updated_at']);
     }
