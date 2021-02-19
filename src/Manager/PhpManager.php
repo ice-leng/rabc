@@ -397,6 +397,15 @@ class PhpManager extends BaseManager
         return $roles;
     }
 
+    public function getRolesByUsers(array $userIds): array
+    {
+        $data = [];
+        foreach ($userIds as $userId) {
+            $data[$userId] = $this->getRolesByUser($userId);
+        }
+        return $data;
+    }
+
     public function getChildRoles(string $roleName): array
     {
         $role = $this->getRole($roleName);

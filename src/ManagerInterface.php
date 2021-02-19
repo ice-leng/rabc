@@ -81,6 +81,13 @@ interface ManagerInterface extends AccessCheckerInterface
     public function getRolesByUser(string $userId): array;
 
     /**
+     * @param array $userIds
+     *
+     * @return array
+     */
+    public function getRolesByUsers(array $userIds): array;
+
+    /**
      * Returns child roles of the role specified. Depth isn't limited.
      *
      * @param string $roleName name of the role to file child roles for

@@ -511,6 +511,42 @@ class DbManager extends BaseManager
         return $roles;
     }
 
+    public function getRolesByUsers(array $userIds): array
+    {
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $params = [':type' => Item::TYPE_ROLE];
+        $sql = "SELECT b.*, a.user_id FROM {$this->assignmentTable} as a INNER JOIN {$this->itemTable} as b on a.item_name = b.name WHERE b.type = :type";
+        $p = [];
+        foreach ($userIds as $key => $value) {
+            $n = ":q{$key}";
+            $params[$n] = $value;
+            $p[] = $n;
+        }
+        $in = implode(", ", $p);
+        $sql .= " AND a.user_id in ( {$in} ) ";
+        $rows = $this->db->select($sql, $params);
+        $users = [];
+        foreach ($rows as $row) {
+            $row = (array)$row;
+            if (empty($users[$row['user_id']])) {
+                $users[$row['user_id']] = [];
+            }
+            $users[$row['user_id']][] = $row;
+        }
+        foreach ($users as $uid => $items) {
+            $roles = $this->getDefaultRoleInstances();
+            foreach ($items as $item) {
+                $item = $this->populateItem($item);
+                $roles[$item->getName()] = $item;
+            }
+            $users[$uid] = $roles;
+        }
+        return $users;
+    }
+
     /**
      * Recursively finds all children and grand children of the specified item.
      *
